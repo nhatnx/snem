@@ -1,5 +1,11 @@
 <?php
 
+namespace app\core;
+
+use app\core\helpers\Database;
+use app\core\helpers\Input;
+use Exception;
+
 class SNEM
 {
     private static ?SNEM $_app = null;
@@ -60,11 +66,11 @@ class SNEM
 
         setlocale(LC_TIME, $this->getLocale());
         $this->db = new Database(
-            $this->getConfig('db')['host'],
-            $this->getConfig('db')['username'],
-            $this->getConfig('db')['password'],
-            $this->getConfig('db')['databaseName'],
-            $this->getConfig('db')['tablePrefix']
+            $this->getDbConfig('host'),
+            $this->getDbConfig('username'),
+            $this->getDbConfig('password'),
+            $this->getDbConfig('databaseName'),
+            $this->getDbConfig('tablePrefix')
         );
 
         $isDebug = $this->getConfig('debugMode');
@@ -110,6 +116,15 @@ class SNEM
         }
 
         return $this->config;
+    }
+
+    public function getDbConfig($key = null)
+    {
+        if (!empty($key)) {
+            return $this->getConfig('db')[$key] ?? null;
+        }
+
+        return $this->getConfig('db');
     }
 
     public function params($key)
@@ -159,7 +174,7 @@ class SNEM
 
     public function getDbCharset()
     {
-        return $this->getConfig('db')['charset'];
+        return $this->getDbConfig('charset');
     }
 
     public function getSiteName()

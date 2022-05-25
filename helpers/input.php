@@ -1,5 +1,7 @@
 <?php
 
+namespace app\core\helpers;
+
 class Input
 {
     public function param(array $type, $key = '', $default = null)

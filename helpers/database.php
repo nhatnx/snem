@@ -1,5 +1,7 @@
 <?php
 
+namespace app\core\helpers;
+
 class Database
 {
     /** @var string variable to hold the query sql */
