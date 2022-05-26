@@ -62,8 +62,6 @@ class SNEM
             exit;
         }
 
-//        var_dump($this->config, $this->params('test'));
-
         setlocale(LC_TIME, $this->getLocale());
         $this->db = new Database(
             $this->getDbConfig('host'),
