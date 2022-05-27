@@ -78,8 +78,8 @@ class SNEM
             error_reporting(0);
         }
 
-        $fileName = $this->input->request('page', $this->getDefaultPage());
-        $fileName = $this->getPagePath() . "/{$fileName}/{$fileName}.php";
+        $this->page = $this->input->request('page', $this->getDefaultPage());
+        $fileName = $this->getPagePath() . "/{$this->page}/{$this->page}.php";
         if (!file_exists($fileName)) {
             // have no file name on URL or file name is incorrect
             // --> add 404 header for 404 page
@@ -87,9 +87,8 @@ class SNEM
             exit();
         }
 
-        $this->page = $this->input->request('page', $this->getDefaultPage());
-        $this->controller = $this->input->request('task', '');
-        $this->action = $this->input->request('action', '');
+        $this->controller = $this->input->request('task', 'index');
+        $this->action = $this->input->request('action', 'index');
 
         ob_start(
             function ($buffer) {
@@ -132,7 +131,7 @@ class SNEM
 
     public function getDefaultPage()
     {
-        return $this->getConfig('defaultPage');
+        return $this->getConfig('defaultPage') ?? 'index';
     }
 
     public function getPagePath()
