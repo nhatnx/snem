@@ -59,7 +59,7 @@ class SNEM
         $isMaintenance = $this->getConfig('maintenanceMode')['enabledMode'];
         if ($isMaintenance) {
             require_once($this->getTemplatePath() . '/offline.php');
-            exit;
+            die();
         }
 
         setlocale(LC_TIME, $this->getLocale());
@@ -84,11 +84,17 @@ class SNEM
             // have no file name on URL or file name is incorrect
             // --> add 404 header for 404 page
             require_once($this->getTemplatePath() . '/notFound.php');
-            exit();
+            die();
         }
 
-        $this->controller = $this->input->request('task', 'index');
-        $this->action = $this->input->request('action', 'index');
+        $this->controller = $this->input->get('task', $this->input->post('task', 'default'));
+        $this->action = $this->input->get('action', $this->input->post('action', 'default'));
+
+        $controllerFileName = "{$this->getPagePath()}/{$this->page}/controllers/" .
+            ucfirst($this->controller) . 'Controller.php';
+        if (file_exists($controllerFileName)) {
+            require_once($controllerFileName);
+        }
 
         ob_start(
             function ($buffer) {
@@ -204,12 +210,17 @@ class SNEM
         return $this->action;
     }
 
-    public function getAbsAsset()
+    public function getInput()
+    {
+        return $this->input;
+    }
+
+    public function getAbsAssetPath()
     {
         return './';
     }
 
-    public function getAbsTemplate()
+    public function getAbsTemplatePath()
     {
         return "./templates/{$this->getTemplateName()}";
     }
@@ -217,5 +228,22 @@ class SNEM
     public function mainBody()
     {
         require_once("{$this->getPagePath()}/{$this->getPage()}/{$this->getPage()}.php");
+    }
+
+    public function redirect($url, $msg = "")
+    {
+        $arrUrl = parse_url($url);
+        $hash = $arrUrl['fragment'];
+        $url = str_replace("#{$hash}", "", $url);
+        $msg = urlencode($msg);
+
+        if (headers_sent()) {
+            echo "<script>window.location.href='$url" . (empty($msg) ? '' : "&msg=$msg") . (empty($hash) ? '' : "#{$hash}") . "';</script>\n";
+        } else {
+            @ob_end_clean(); // clear output buffer
+            header("HTTP/1.1 301 Moved Permanently");
+            header("Location: " . $url . (empty($msg) ? '' : "&msg=$msg") . (empty($hash) ? '' : "#{$hash}"));
+        }
+        die();
     }
 }
