@@ -2,6 +2,8 @@
 
 namespace app\core\helpers;
 
+use mysqli;
+
 class Database
 {
     /** @var string variable to hold the query sql */
@@ -70,6 +72,15 @@ class Database
         mysqli_close($this->_resource);
 
         return;
+    }
+
+    /**
+     * Get mysqli
+     * @return mysqli|bool|false
+     */
+    public function getResource()
+    {
+        return $this->_resource;
     }
 
     /**
