@@ -15,6 +15,7 @@ class SNEM
     private $page = null;
     private $controller = null;
     private $action = null;
+    private ?string $view = 'default';
     private ?array $meta = null;
     private ?array $head = null;
     private ?array $footer = null;
@@ -87,13 +88,29 @@ class SNEM
             die();
         }
 
-        $this->controller = $this->input->get('task', $this->input->post('task', 'default'));
+        $controllerName = ucfirst($this->input->get('task', $this->input->post('task', 'default'))) . 'Controller';
         $this->action = $this->input->get('action', $this->input->post('action', 'default'));
 
-        $controllerFileName = "{$this->getPagePath()}/{$this->page}/controllers/" .
-            ucfirst($this->controller) . 'Controller.php';
+        $controllerFileName = "{$this->getPagePath()}/{$this->page}/controllers/{$controllerName}.php";
         if (file_exists($controllerFileName)) {
             require_once($controllerFileName);
+
+            if (class_exists($controllerName)) {
+                $this->controller = new $controllerName();
+
+                if (method_exists($this->controller, 'beforeAction')) {
+                    $this->controller->beforeAction($this->action);
+                }
+
+                $actionName = 'action' . ucfirst($this->action);
+                if (method_exists($this->controller, $actionName)) {
+                    $this->view = $this->controller->$actionName();
+                }
+
+                if (method_exists($this->controller, 'afterAction')) {
+                    $this->controller->afterAction($this->action);
+                }
+            }
         }
 
         ob_start(
@@ -210,6 +227,11 @@ class SNEM
         return $this->action;
     }
 
+    public function getView()
+    {
+        return $this->view;
+    }
+
     public function getInput()
     {
         return $this->input;
@@ -228,6 +250,8 @@ class SNEM
     public function mainBody()
     {
         require_once("{$this->getPagePath()}/{$this->getPage()}/{$this->getPage()}.php");
+        $page = $this->getPage();
+        new $page($this);
     }
 
     public function redirect($url, $msg = "")

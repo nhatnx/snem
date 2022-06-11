@@ -361,4 +361,14 @@ class Database
         mysqli_free_result($cur);
         return $a_ret;
     }
+
+    /**
+     * Escapes special characters in a string for use in an SQL statement
+     * @param $str
+     * @return string
+     */
+    public function escape($str)
+    {
+        return mysqli_real_escape_string($this->_resource, $str);
+    }
 }
