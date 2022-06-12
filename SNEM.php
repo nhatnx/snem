@@ -9,9 +9,9 @@ use Exception;
 class SNEM
 {
     private static ?SNEM $_app = null;
-    private ?Database $db = null;
+    public ?Database $db = null;
     private ?array $config = null;
-    private ?Input $input = null;
+    public ?Input $input = null;
     private $page = null;
     private $controller = null;
     private $action = null;
@@ -96,7 +96,7 @@ class SNEM
             require_once($controllerFileName);
 
             if (class_exists($controllerName)) {
-                $this->controller = new $controllerName();
+                $this->controller = new $controllerName($this);
 
                 if (method_exists($this->controller, 'beforeAction')) {
                     $this->controller->beforeAction($this->action);
@@ -104,13 +104,19 @@ class SNEM
 
                 $actionName = 'action' . ucfirst($this->action);
                 if (method_exists($this->controller, $actionName)) {
-                    $this->view = $this->controller->$actionName();
+                    ob_start();
+                    ob_implicit_flush(false);
+                    $this->controller->$actionName();
+                    $this->view = ob_get_clean();
                 }
 
                 if (method_exists($this->controller, 'afterAction')) {
                     $this->controller->afterAction($this->action);
                 }
             }
+        } else {
+            require_once($this->getTemplatePath() . '/notFound.php');
+            die();
         }
 
         ob_start(
