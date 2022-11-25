@@ -92,26 +92,31 @@ class SNEM
         $this->action = $this->input->get('action', $this->input->post('action', 'default'));
 
         $controllerFileName = "{$this->getPagePath()}/{$this->page}/controllers/{$controllerName}.php";
-        if (file_exists($controllerFileName)) {
-            require_once($controllerFileName);
 
-            if (class_exists($controllerName)) {
-                $this->controller = new $controllerName($this);
+        if (file_exists("{$this->getPagePath()}/{$this->page}")) {
+            if (file_exists($controllerFileName) || file_exists(
+                    $controllerFileName = "{$this->getBasePath()}/core/Controller.php"
+                )) {
+                require_once($controllerFileName);
 
-                if (method_exists($this->controller, 'beforeAction')) {
-                    $this->controller->beforeAction($this->action);
-                }
+                if (class_exists($controllerName) || class_exists($controllerName = "Controller")) {
+                    $this->controller = new $controllerName($this);
 
-                $actionName = 'action' . ucfirst($this->action);
-                if (method_exists($this->controller, $actionName)) {
-                    ob_start();
-                    ob_implicit_flush(false);
-                    $this->controller->$actionName();
-                    $this->view = ob_get_clean();
-                }
+                    if (method_exists($this->controller, 'beforeAction')) {
+                        $this->controller->beforeAction($this->action);
+                    }
 
-                if (method_exists($this->controller, 'afterAction')) {
-                    $this->controller->afterAction($this->action);
+                    $actionName = 'action' . ucfirst($this->action);
+                    if (method_exists($this->controller, $actionName)) {
+                        ob_start();
+                        ob_implicit_flush(false);
+                        $this->controller->$actionName();
+                        $this->view = ob_get_clean();
+                    }
+
+                    if (method_exists($this->controller, 'afterAction')) {
+                        $this->controller->afterAction($this->action);
+                    }
                 }
             }
         } else {
@@ -176,6 +181,11 @@ class SNEM
     public function getTemplatePath()
     {
         return $this->getConfig('templatePath');
+    }
+
+    public function getHelperPath()
+    {
+        return $this->getConfig('helperPath');
     }
 
     public function getTemplateName()
@@ -243,7 +253,7 @@ class SNEM
         return $this->input;
     }
 
-    public function getAbsAssetPath()
+    public function getAbsPath()
     {
         return './';
     }
@@ -260,7 +270,7 @@ class SNEM
         new $page($this);
     }
 
-    public function redirect($url, $msg = "")
+    public static function redirect($url, $msg = "")
     {
         $arrUrl = parse_url($url);
         $hash = $arrUrl['fragment'];
@@ -275,5 +285,10 @@ class SNEM
             header("Location: " . $url . (empty($msg) ? '' : "&msg=$msg") . (empty($hash) ? '' : "#{$hash}"));
         }
         die();
+    }
+
+    public function isAjaxRequest()
+    {
+        return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest';
     }
 }

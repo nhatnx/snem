@@ -23,4 +23,9 @@ class Input
     {
         return $this->param($_POST, $key, $default);
     }
+
+    public function session($key = '', $default = null)
+    {
+        return $this->param($_SESSION, $key, $default);
+    }
 }

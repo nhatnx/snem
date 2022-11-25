@@ -2,6 +2,9 @@
 
 namespace app\core\helpers;
 
+define('SNEM_DB_ASSOC', 1);
+define('SNEM_DB_OBJECT', 2);
+
 use mysqli;
 
 class Database
@@ -280,9 +283,10 @@ class Database
     /**
      * This method loads the result returned by the query as an object.
      * @param null|string $sql
+     * @param int $resultType
      * @return array Object returned in the query or null if the query failed.
      */
-    public function execQuery($sql = null)
+    public function execQuery($sql = null, $resultType = SNEM_DB_OBJECT)
     {
         if (!($cur = $this->query($sql))) {
             $this->traceERROR();
@@ -290,7 +294,7 @@ class Database
         }
 
         $a_ret = array();
-        while ($a_row = mysqli_fetch_object($cur)) {
+        while ($a_row = ($resultType == SNEM_DB_OBJECT ? mysqli_fetch_object($cur) : mysqli_fetch_assoc($cur))) {
             $a_ret[] = $a_row;
         }
 
@@ -316,9 +320,10 @@ class Database
     /**
      * This method loads the first row returned by the query.
      * @param null|string $sql
+     * @param int $resultType
      * @return object|null First row of the query.
      */
-    public function execRow($sql = null)
+    public function execRow($sql = null, $resultType = SNEM_DB_OBJECT)
     {
         if (!($cur = $this->query($sql))) {
             $this->traceERROR();
@@ -326,7 +331,7 @@ class Database
         }
 
         $a_ret = null;
-        if ($a_row = mysqli_fetch_object($cur)) {
+        if ($a_row = ($resultType == SNEM_DB_OBJECT ? mysqli_fetch_object($cur) : mysqli_fetch_assoc($cur))) {
             $a_ret = $a_row;
         }
 
