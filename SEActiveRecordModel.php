@@ -2,8 +2,6 @@
 
 namespace app\core;
 
-define('ADODB_ASSOC_CASE', ADODB_ASSOC_CASE_LOWER);
-
 use ADODB_Active_Record;
 
 class SEActiveRecordModel extends ADODB_Active_Record

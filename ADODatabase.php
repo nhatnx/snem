@@ -2,6 +2,8 @@
 
 namespace app\core;
 
+define('ADODB_ASSOC_CASE', ADODB_ASSOC_CASE_NATIVE);
+
 use ADOConnection;
 
 class ADODatabase extends ADOConnection

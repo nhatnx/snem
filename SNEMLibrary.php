@@ -143,7 +143,10 @@ class SNEMLibrary
 
         $this->user = new SEUser();
         $this->input = new SEInput();
-        $this->helper = new SEHelper();
+
+        if (!$this->helper) {
+            $this->helper = new SEHelper();
+        }
 
         $this->page = $this->input->request('page', $this->getDefaultPage());
         $fileName = $this->getPath(self::CORE_PATH_PAGE) . "/{$this->page}/{$this->page}.php";
@@ -199,6 +202,21 @@ class SNEMLibrary
         require_once "{$this->getPath(self::CORE_PATH_TEMPLATE)}/{$this->getTemplateName()}/{$this->getTemplateName()}.php";
 
         ob_end_flush();
+    }
+
+    public function setHelper($helperInstance): SNEMLibrary
+    {
+        if (is_string($helperInstance)) {
+            $clsName = ucfirst($helperInstance) . 'Helper';
+            if (!class_exists($clsName)) {
+                $clsName = 'app\\core\\helpers\\SE' . $clsName;
+            }
+            $this->helper = new $clsName();
+        } else {
+            $this->helper = $helperInstance;
+        }
+
+        return $this;
     }
 
     public function getDb(): ?ADODatabase

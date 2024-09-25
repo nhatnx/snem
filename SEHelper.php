@@ -11,10 +11,9 @@ class SEHelper
 {
     public function __get($name)
     {
-        $name = ucfirst(strtolower($name)) . 'Helper';
-        $clsName = 'app\\helpers\\' . $name;
+        $clsName = ucfirst($name) . 'Helper';
         if (!class_exists($clsName)) {
-            $clsName = 'app\\core\\helpers\\SE' . $name;
+            $clsName = 'app\\core\\helpers\\SE' . $clsName;
         }
 
         return new $clsName();
