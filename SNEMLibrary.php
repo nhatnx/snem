@@ -414,13 +414,14 @@ class SNEMLibrary
         }
 
         $msg = urlencode($msg);
+        $finalUrl = $url . (empty($msg) ? '' : "?msg=$msg") . (empty($hash) ? '' : "#{$hash}");
 
         if (headers_sent()) {
-            echo "<script>window.location.href='$url" . (empty($msg) ? '' : "&msg=$msg") . (empty($hash) ? '' : "#{$hash}") . "';</script>\n";
+            echo "<script>window.location.href='$finalUrl';</script>\n";
         } else {
             @ob_end_clean(); // clear output buffer
             header("HTTP/1.1 301 Moved Permanently");
-            header("Location: " . $url . (empty($msg) ? '' : "&msg=$msg") . (empty($hash) ? '' : "#{$hash}"));
+            header("Location: $finalUrl");
         }
         die();
     }
