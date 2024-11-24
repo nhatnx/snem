@@ -11,7 +11,7 @@ class SEActiveRecordModel extends ADODB_Active_Record
     public const SEAR_RELATION_BELONGS_TO = 1;
     public const SEAR_RELATION_HAS_MANY = 2;
 
-    public array $primaryKeys = ['id'];
+    public ?array $primaryKeys = ['id'];
     public ?string $_name = null;
     public string $createdAt = 'created_at';
     public string $updatedAt = 'updated_at';
@@ -32,7 +32,7 @@ class SEActiveRecordModel extends ADODB_Active_Record
             $tableName = get_class($this);
         }
 
-        parent::__construct($tableName, $this->primaryKeys);
+        parent::__construct($tableName, array_map('strtoupper', $this->primaryKeys));
 
         self::useDefaultValues(true);
         self::$_changeNames = false;
