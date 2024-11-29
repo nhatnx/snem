@@ -203,6 +203,15 @@ class ADODatabase extends ADOConnection
         return $this->getData('getRow', $sql, $inputarr, $fetchDTO);
     }
 
+    /**
+     * Get first column of each row of the recordset
+     *
+     * @param $sql
+     * @param $inputarr
+     * @param $trim
+     * @param $fetchDTO
+     * @return array|bool|mixed
+     */
     public function getCol($sql, $inputarr = false, $trim = false, $fetchDTO = true)
     {
         return $this->getData('getCol', $sql, $inputarr, $fetchDTO, $trim);
