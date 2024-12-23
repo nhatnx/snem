@@ -224,6 +224,8 @@ class ADODatabase extends ADOConnection
 
     public function execute($sql, $inputarr = false)
     {
+        $sql = $this->replacePrefix($sql);
+
         return $this->conn->execute($sql, $inputarr);
     }
 }
