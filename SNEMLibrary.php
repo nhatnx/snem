@@ -54,7 +54,7 @@ class SNEMLibrary
             die();
         }
 
-        $mainFiles = $this->getAllFiles('app' . self::DS . 'core', [], false);
+        $mainFiles = $this->getAllFiles('app' . self::DS . 'core', ['SEJsonController.php'], false);
         $this->getAllFiles('app' . self::DS . 'core', $mainFiles);
         $this->getAllFiles('app' . self::DS . 'controllers');
         $this->getAllFiles('app' . self::DS . 'models');
@@ -80,10 +80,13 @@ class SNEMLibrary
             return [];
         }
 
+        // TODO ignore files by patterns
         $ignoreFiles = array_merge(
             [
                 'SNEMLibrary.php',
                 'index.php',
+                'desktop.ini',
+                'GoogleDriveFS.exe',
             ],
             $ignoreFiles
         );
