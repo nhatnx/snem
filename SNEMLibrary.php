@@ -92,7 +92,7 @@ class SNEMLibrary
         );
 
         $files = [];
-        $dh = new DirectoryIterator($dir);
+        $dh = new DirectoryIterator($dir); // TODO should replace by GlobIterator(*.php) ?
         foreach ($dh as $item) {
             if (!$item->isDot()) {
                 if ($isRecursive && $item->isDir()) {
