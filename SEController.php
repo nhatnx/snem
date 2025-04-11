@@ -18,13 +18,17 @@ class SEController
 
     public function render($view, $args = []): void
     {
-        extract($args);
+        if (!empty($args)) {
+            extract($args);
+        }
         require_once "{$this->snem->getPath(SNEMLibrary::CORE_PATH_PAGE)}/{$this->snem->getPage()}/views/{$view}.php";
     }
 
     public function partialRender($file, $args = [])
     {
-        extract($args);
+        if (!empty($args)) {
+            extract($args);
+        }
         require_once "{$this->snem->getPath(SNEMLibrary::CORE_PATH_PAGE)}/{$this->snem->getPage()}/views/{$file}.php";
         unset($file, $args);
         exit();

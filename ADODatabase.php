@@ -228,4 +228,9 @@ class ADODatabase extends ADOConnection
 
         return $this->conn->execute($sql, $inputarr);
     }
+
+    public function getInsertId()
+    {
+        return $this->conn->insert_Id();
+    }
 }

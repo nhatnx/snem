@@ -412,7 +412,7 @@ class SNEMLibrary
             $url = SNEMLibrary::app()->getAbsPath();
         } else {
             $arrUrl = parse_url($url);
-            $hash = $arrUrl['fragment'];
+            $hash = $arrUrl['fragment'] ?? '';
             $url = str_replace("#{$hash}", "", $url);
         }
 
