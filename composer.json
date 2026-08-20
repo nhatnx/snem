@@ -1,0 +1,15 @@
+{
+    "name": "nhatnx/snem",
+    "description": "SNEM — a lightweight PHP MVC micro-framework",
+    "type": "library",
+    "require": {
+        "php": ">=7.4",
+        "ext-json": "*",
+        "adodb/adodb-php": "^5.22"
+    },
+    "autoload": {
+        "psr-4": {
+            "app\\core\\": ""
+        }
+    }
+}
