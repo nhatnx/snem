@@ -54,8 +54,6 @@ class SNEMLibrary
             die();
         }
 
-        $mainFiles = $this->getAllFiles('app' . self::DS . 'core', ['SEJsonController.php'], false);
-        $this->getAllFiles('app' . self::DS . 'core', $mainFiles);
         $this->getAllFiles('app' . self::DS . 'controllers');
         $this->getAllFiles('app' . self::DS . 'models');
         $this->getAllFiles('app' . self::DS . 'helpers');
@@ -166,29 +164,27 @@ class SNEMLibrary
         $controllerFileName = "{$this->getPath(self::CORE_PATH_PAGE)}/{$this->page}/controllers/{$controllerName}.php";
 
         if (file_exists("{$this->getPath(self::CORE_PATH_PAGE)}/{$this->page}")) {
-            if (file_exists($controllerFileName) || file_exists(
-                    $controllerFileName = "{$this->getPath(self::CORE_PATH_BASE)}/core/SEController.php"
-                )) {
+            if (file_exists($controllerFileName)) {
                 require_once $controllerFileName;
+            }
 
-                if (class_exists($controllerName) || class_exists($controllerName = 'app\core\SEController')) {
-                    $this->controller = new $controllerName($this);
+            if (class_exists($controllerName) || class_exists($controllerName = 'app\core\SEController')) {
+                $this->controller = new $controllerName($this);
 
-                    if (method_exists($this->controller, 'beforeAction')) {
-                        $this->controller->beforeAction($this->action);
-                    }
+                if (method_exists($this->controller, 'beforeAction')) {
+                    $this->controller->beforeAction($this->action);
+                }
 
-                    $actionName = 'action' . ucfirst($this->action);
-                    if (method_exists($this->controller, $actionName)) {
-                        ob_start();
-                        ob_implicit_flush(false);
-                        $this->controller->$actionName();
-                        $this->view = ob_get_clean();
-                    }
+                $actionName = 'action' . ucfirst($this->action);
+                if (method_exists($this->controller, $actionName)) {
+                    ob_start();
+                    ob_implicit_flush(false);
+                    $this->controller->$actionName();
+                    $this->view = ob_get_clean();
+                }
 
-                    if (method_exists($this->controller, 'afterAction')) {
-                        $this->controller->afterAction($this->action);
-                    }
+                if (method_exists($this->controller, 'afterAction')) {
+                    $this->controller->afterAction($this->action);
                 }
             }
         } else {
