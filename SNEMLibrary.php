@@ -54,9 +54,13 @@ class SNEMLibrary
             die();
         }
 
-        $this->getAllFiles('app' . self::DS . 'controllers');
-        $this->getAllFiles('app' . self::DS . 'models');
-        $this->getAllFiles('app' . self::DS . 'helpers');
+        $this->registerAppAutoloader(
+            [
+                'app' . self::DS . 'controllers',
+                'app' . self::DS . 'models',
+                'app' . self::DS . 'helpers',
+            ]
+        );
 
         $this->db = new ADODatabase(
             $this->getDbConfig('driver'),
@@ -72,37 +76,50 @@ class SNEMLibrary
         ADOdb_Active_Record::SetDatabaseAdapter($conn);
     }
 
-    private function getAllFiles($dir, $ignoreFiles = [], $isRecursive = true): array
+    /**
+     * Registers a lazy autoloader over the given directories instead of eagerly
+     * require_once-ing every file in them on every request. Classes in these
+     * directories aren't necessarily PSR-4 namespaced (some are global-namespace),
+     * so this maps by unqualified class name — the one convention that already
+     * holds across every file: the class's short name always matches its filename.
+     */
+    private function registerAppAutoloader(array $dirs): void
     {
-        if (!is_dir($dir)) {
-            return [];
+        $classMap = [];
+        foreach ($dirs as $dir) {
+            $this->collectClassMap($dir, $classMap);
         }
 
-        // TODO ignore files by patterns
-        $ignoreFiles = array_merge(
-            [
-                'SNEMLibrary.php',
-                'index.php',
-                'desktop.ini',
-                'GoogleDriveFS.exe',
-            ],
-            $ignoreFiles
-        );
-
-        $files = [];
-        $dh = new DirectoryIterator($dir); // TODO should replace by GlobIterator(*.php) ?
-        foreach ($dh as $item) {
-            if (!$item->isDot()) {
-                if ($isRecursive && $item->isDir()) {
-                    $files = array_merge($files, $this->getAllFiles($dir . self::DS . $item, $ignoreFiles));
-                } elseif ($item->isFile() && !in_array($item->getFilename(), $ignoreFiles)) {
-                    $files = array_merge($files, [$item->getPathname()]);
-                    require_once $dir . self::DS . $item->getFilename();
+        spl_autoload_register(
+            static function ($class) use ($classMap) {
+                $pos = strrpos($class, '\\');
+                $shortName = $pos === false ? $class : substr($class, $pos + 1);
+                if (isset($classMap[$shortName])) {
+                    require_once $classMap[$shortName];
                 }
             }
+        );
+    }
+
+    private function collectClassMap($dir, array &$classMap): void
+    {
+        if (!is_dir($dir)) {
+            return;
         }
 
-        return array_merge($files, $ignoreFiles);
+        $ignoreFiles = ['index.php', 'desktop.ini', 'GoogleDriveFS.exe'];
+
+        $dh = new DirectoryIterator($dir); // TODO should replace by GlobIterator(*.php) ?
+        foreach ($dh as $item) {
+            if ($item->isDot()) {
+                continue;
+            }
+            if ($item->isDir()) {
+                $this->collectClassMap($dir . self::DS . $item, $classMap);
+            } elseif ($item->isFile() && $item->getExtension() === 'php' && !in_array($item->getFilename(), $ignoreFiles)) {
+                $classMap[$item->getBasename('.php')] = $item->getPathname();
+            }
+        }
     }
 
     /**
