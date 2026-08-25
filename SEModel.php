@@ -23,7 +23,7 @@ class SEModel
             return $this->$methodName();
         }
 
-        return $this;
+        return null;
     }
 
     public function __set($property, $value)

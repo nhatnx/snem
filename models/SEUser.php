@@ -49,7 +49,11 @@ class SEUser extends SEModel
 
     public function login(?SEUserIdentity $userIdentity, ?string $return = null): bool
     {
-        $return = $return ?? $_SERVER['HTTP_REFERER'];
+        if ($userIdentity === null) {
+            return false;
+        }
+
+        $return = $return ?? $_SERVER['HTTP_REFERER'] ?? '';
         $return = str_replace('&logout=logout', '', $return);
 
         if ($this->beforeLogin($userIdentity->username)) {
@@ -78,14 +82,14 @@ class SEUser extends SEModel
     {
         $isForbidden = $this->getIsGuest() || $extraNonAuthorizationConditions;
 
-//        if ($extraNonAuthorizationConditions) {
-//            $message = 'Bạn không có quyền truy cập chức năng này!';
-//        }
-
         if ($isForbidden) {
+            $message = $message
+                ?: SNEMLibrary::app()->getConfig('forbiddenMessage')
+                ?: 'Please log in!';
+
             header('HTTP/1.0 403 Forbidden');
             echo '<div class="text-center">';
-            echo $message ?? "Vui lòng đăng nhập!";
+            echo $message;
             echo '</div>';
         }
 

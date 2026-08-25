@@ -65,22 +65,14 @@ class SEActiveRecordModel extends ADODB_Active_Record
             $return = null;
             if ($relationType == static::SEAR_RELATION_BELONGS_TO) {
                 if (!empty($this->$foreignKey)) {
-                    if ($k = reset($modelName::model()->primaryKeys)) {
-                        $relationId = $k;
-                    } else {
-                        $relationId = 'id';
-                    }
+                    $relationId = reset($modelName::model()->primaryKeys) ?: 'id';
 
-                    $return = $modelName::model()->find("{$relationId} = {$this->$foreignKey}")[0] ?? null;
+                    $return = $modelName::model()->find("{$relationId} = ?", [$this->$foreignKey])[0] ?? null;
                 }
             } elseif ($relationType == static::SEAR_RELATION_HAS_MANY) {
-                if ($k = reset($this->primaryKeys)) {
-                    $relationId = $k;
-                } else {
-                    $relationId = 'id';
-                }
+                $relationId = reset($this->primaryKeys) ?: 'id';
 
-                $return = $modelName::model()->find("{$foreignKey} = {$this->$relationId}");
+                $return = $modelName::model()->find("{$foreignKey} = ?", [$this->$relationId]);
             }
 
             return $return;

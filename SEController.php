@@ -2,12 +2,10 @@
 
 namespace app\core;
 
-use ADOConnection;
-
 class SEController
 {
     protected SNEMLibrary $snem;
-    protected ADOConnection $db;
+    protected ADODatabase $db;
     public string $format = 'xml';
 
     public function __construct($snem)
@@ -19,17 +17,17 @@ class SEController
     public function render($view, $args = []): void
     {
         if (!empty($args)) {
-            extract($args);
+            extract($args, EXTR_SKIP);
         }
-        require_once "{$this->snem->getPath(SNEMLibrary::CORE_PATH_PAGE)}/{$this->snem->getPage()}/views/{$view}.php";
+        require "{$this->snem->getPath(SNEMLibrary::CORE_PATH_PAGE)}/{$this->snem->getPage()}/views/{$view}.php";
     }
 
     public function partialRender($file, $args = [])
     {
         if (!empty($args)) {
-            extract($args);
+            extract($args, EXTR_SKIP);
         }
-        require_once "{$this->snem->getPath(SNEMLibrary::CORE_PATH_PAGE)}/{$this->snem->getPage()}/views/{$file}.php";
+        require "{$this->snem->getPath(SNEMLibrary::CORE_PATH_PAGE)}/{$this->snem->getPage()}/views/{$file}.php";
         unset($file, $args);
         exit();
     }
@@ -112,7 +110,7 @@ class SEController
         header('Content-type: ' . $contentType . '; charset=UTF-8');
 
         if ($format == 'json') {
-            echo json_encode($result);
+            echo json_encode($result, JSON_UNESCAPED_UNICODE);
         } else {
             echo $result;
         }

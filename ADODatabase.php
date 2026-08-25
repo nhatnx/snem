@@ -2,11 +2,18 @@
 
 namespace app\core;
 
-define('ADODB_ASSOC_CASE', ADODB_ASSOC_CASE_NATIVE);
+if (!defined('ADODB_ASSOC_CASE')) {
+    define('ADODB_ASSOC_CASE', ADODB_ASSOC_CASE_NATIVE);
+}
 
 use ADOConnection;
 
-class ADODatabase extends ADOConnection
+/**
+ * Wraps the driver-specific ADOConnection. Calls and property accesses not
+ * handled here are forwarded to the live connection, so this object can be
+ * used anywhere a plain ADOConnection would be.
+ */
+class ADODatabase
 {
     private ADOConnection $conn;
 
@@ -35,8 +42,6 @@ class ADODatabase extends ADOConnection
         string $tablePrefix = '',
         bool $debugMode = false
     ) {
-        parent::__construct();
-
         $this->conn = newADOConnection($driver);
 
         if ($driver === 'mysqli') {
@@ -52,6 +57,26 @@ class ADODatabase extends ADOConnection
     public function getConn(): ADOConnection
     {
         return $this->conn;
+    }
+
+    public function __call($method, $args)
+    {
+        return $this->conn->$method(...$args);
+    }
+
+    public function __get($property)
+    {
+        return $this->conn->$property;
+    }
+
+    public function __set($property, $value)
+    {
+        $this->conn->$property = $value;
+    }
+
+    public function __isset($property)
+    {
+        return isset($this->conn->$property);
     }
 
     public function setFetchMode($mode = ADODB_FETCH_ASSOC): void
