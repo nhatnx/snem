@@ -63,7 +63,7 @@ That's it — no constants to define, no manual includes. ADOdb is wired up auto
 
 Both repository types above also work fully offline against a checkout on your own disk — useful when the framework and your app live side by side and nothing is published anywhere.
 
-**Live link (develop framework and app together).** Point a path repository at the framework checkout, as in the path example above (an absolute URL like `e:/workplace/projects/snem` is fine), and require `dev-main`:
+**Live link (develop framework and app together).** Point a path repository at the framework checkout, as in the path example above (an absolute URL like `c:/path/to/snem` is fine), and require `dev-main`:
 
 ```json
 {
