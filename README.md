@@ -8,7 +8,9 @@ SNEM gives you query-string routing, controllers with before/after hooks, plain 
 
 ## Installation
 
-Add the package to your app's `composer.json` via a path or VCS repository:
+Add the package to your app's `composer.json` via a path or VCS repository.
+
+**Path repository** — when the framework lives next to your app on disk (changes are picked up instantly via a symlink; good for local development):
 
 ```json
 {
@@ -20,6 +22,34 @@ Add the package to your app's `composer.json` via a path or VCS repository:
     }
 }
 ```
+
+**VCS repository** — when the framework is hosted in a git repository (Composer reads versions from branches and tags):
+
+```json
+{
+    "repositories": [
+        { "type": "vcs", "url": "https://github.com/nhatnx/snem.git" }
+    ],
+    "require": {
+        "nhatnx/snem": "dev-main"
+    }
+}
+```
+
+Any git host works the same way — e.g. a private server over SSH:
+
+```json
+{
+    "repositories": [
+        { "type": "vcs", "url": "git@git.example.com:nhatnx/snem.git" }
+    ],
+    "require": {
+        "nhatnx/snem": "dev-main"
+    }
+}
+```
+
+With a VCS repository, `dev-main` tracks the `main` branch; once you tag a release (e.g. `git tag v1.0.0`), you can require `"^1.0"` instead.
 
 Then:
 
