@@ -59,6 +59,57 @@ composer install
 
 That's it — no constants to define, no manual includes. ADOdb is wired up automatically through Composer's autoloader.
 
+## Local development & releasing
+
+Both repository types above also work fully offline against a checkout on your own disk — useful when the framework and your app live side by side and nothing is published anywhere.
+
+**Live link (develop framework and app together).** Point a path repository at the framework checkout, as in the path example above (an absolute URL like `e:/workplace/projects/snem` is fine), and require `dev-main`:
+
+```json
+{
+    "repositories": [
+        { "type": "path", "url": "../snem" }
+    ],
+    "require": {
+        "nhatnx/snem": "dev-main"
+    }
+}
+```
+
+Run `composer update nhatnx/snem` once; Composer symlinks (on Windows: junctions) `vendor/nhatnx/snem` to the checkout, so every framework edit is visible in the app immediately — no re-install.
+
+Note: require `dev-main`, not `*` — with no tagged release and default stability settings, `*` matches nothing and the install fails.
+
+**Local release (pin the app to a tagged snapshot).** Point a VCS repository at the framework's local git repo and cut releases with tags:
+
+```sh
+cd path/to/snem
+git tag v1.0.0
+```
+
+```json
+{
+    "repositories": [
+        { "type": "vcs", "url": "../snem" }
+    ],
+    "require": {
+        "nhatnx/snem": "^1.0"
+    }
+}
+```
+
+Composer clones from the local `.git` history, so the app gets exactly the `v1.0.0` commit — a real copy in `vendor/`, unaffected by ongoing edits in the framework working tree. To ship the next release: commit, `git tag v1.0.1`, then run `composer update nhatnx/snem` in the app. Only committed and tagged work is visible here; the working tree doesn't count.
+
+A good rhythm: use the live link while iterating on framework and app together, then switch the app to the tagged flow once you want it insulated from framework churn — the swap is just the `repositories` entry and the version constraint.
+
+To run the app locally, PHP's built-in server is enough — from the app root:
+
+```sh
+php -S localhost:8000
+```
+
+then open `http://localhost:8000/?page=index`.
+
 ## Quickstart
 
 A minimal app looks like this:
