@@ -6,6 +6,10 @@ SNEM gives you query-string routing, controllers with before/after hooks, plain 
 
 **Requirements:** PHP >= 7.4, `ext-json`. The only dependency is `adodb/adodb-php`.
 
+**In a hurry?** [`examples/starter/`](examples/starter/) is a complete, runnable
+app covering every feature below — load its `schema.sql`, run `php -S localhost:8000`
+inside it, and read the code alongside this document.
+
 ## Installation
 
 Add the package to your app's `composer.json` via a path or VCS repository.
@@ -112,7 +116,8 @@ then open `http://localhost:8000/?page=index`.
 
 ## Quickstart
 
-A minimal app looks like this:
+The fastest start is to copy [`examples/starter/`](examples/starter/) and edit it.
+Built by hand, a minimal app looks like this:
 
 ```text
 myapp/
@@ -213,6 +218,11 @@ Routing is driven by query-string parameters mapped onto your directory layout:
 The request flow: the controller's `beforeAction()` hook runs, then `actionZ()` — whose echoed output is captured as the page's view — then `afterAction()`. Finally the site template is rendered; when it calls `mainBody()`, the page class echoes the captured view into the layout.
 
 The built-in `actionDefault()` simply renders the view named after the page (`views/{page}.php`).
+
+`page`, `task` and `action` come straight from the query string and end up in
+file paths and class names, so each must match `[A-Za-z0-9_-]+`; anything else
+is rejected rather than escaped. An unknown page renders the 404 template, while
+an unknown action simply produces no view output.
 
 ## Controllers
 

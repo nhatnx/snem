@@ -29,7 +29,8 @@ class SNEMLibrary
     protected $page = null;
     protected $controller = null;
     protected $action = null;
-    protected ?string $view = 'default';
+    /** Output captured from the action; empty until one actually runs. */
+    protected ?string $view = '';
 
     protected ?array $meta = null;
     protected ?array $head = null;
@@ -51,6 +52,10 @@ class SNEMLibrary
     public function __construct($config = null)
     {
         $this->config = $this->resolveConfig($config);
+
+        // Publish the singleton before anything can bail out, so templates
+        // rendered during construction (offline.php) can still call app().
+        self::$_app = $this;
 
         $isMaintenance = $this->getConfig('maintenanceMode')['enabledMode'] ?? false;
         if ($isMaintenance) {
@@ -102,9 +107,9 @@ class SNEMLibrary
             'templatePath' => $basePath . self::DS . 'templates',
             'helperPath' => $basePath . self::DS . 'helpers',
             'autoloadPaths' => [
-                'app' . self::DS . 'controllers',
-                'app' . self::DS . 'models',
-                'app' . self::DS . 'helpers',
+                $basePath . self::DS . 'app' . self::DS . 'controllers',
+                $basePath . self::DS . 'app' . self::DS . 'models',
+                $basePath . self::DS . 'app' . self::DS . 'helpers',
             ],
             'params' => [],
         ];
@@ -215,11 +220,14 @@ class SNEMLibrary
             $this->helper = new SEHelper();
         }
 
-        $this->page = $this->input->request('page', $this->getDefaultPage());
+        $this->page = self::sanitizeRouteToken($this->input->request('page', $this->getDefaultPage()));
         $pageDir = "{$this->getPath(self::CORE_PATH_PAGE)}/{$this->page}";
-        if (!file_exists("{$pageDir}/{$this->page}.php")) {
+        if ($this->page === '' || !file_exists("{$pageDir}/{$this->page}.php")) {
             // have no file name on URL or file name is incorrect
             // --> add 404 header for 404 page
+            if (!headers_sent()) {
+                header('HTTP/1.1 404 Not Found');
+            }
             require_once $this->getPath(self::CORE_PATH_TEMPLATE) . '/notFound.php';
             die();
         }
@@ -243,15 +251,36 @@ class SNEMLibrary
     }
 
     /**
+     * `page`, `task` and `action` come straight from the query string and end up
+     * in file paths and class names, so anything outside [A-Za-z0-9_-] — path
+     * separators and `..` above all — is rejected rather than escaped.
+     *
+     * @param mixed $token
+     */
+    protected static function sanitizeRouteToken($token): string
+    {
+        if (!is_string($token) || !preg_match('/^[A-Za-z0-9_-]+$/', $token)) {
+            return '';
+        }
+
+        return $token;
+    }
+
+    /**
      * Resolves the controller from `task` (falling back to the base
      * SEController) and runs `action{Action}` between the beforeAction /
      * afterAction hooks, capturing the action's output into the view.
      */
     protected function dispatch(string $pageDir): void
     {
-        $controllerName = ucfirst($this->input->get('task', $this->input->post('task', 'default'))) . 'Controller';
-        $this->action = $this->input->get('action', $this->input->post('action', 'default'));
+        $task = self::sanitizeRouteToken($this->input->get('task', $this->input->post('task', 'default')));
+        $this->action = self::sanitizeRouteToken($this->input->get('action', $this->input->post('action', 'default')));
 
+        if ($task === '' || $this->action === '') {
+            return;
+        }
+
+        $controllerName = ucfirst($task) . 'Controller';
         $controllerFileName = "{$pageDir}/controllers/{$controllerName}.php";
         if (file_exists($controllerFileName)) {
             require_once $controllerFileName;
@@ -481,16 +510,25 @@ class SNEMLibrary
 
     public static function redirect($url, $msg = "", int $statusCode = 302): void
     {
+        $hash = '';
         if (empty($url)) {
             $url = SNEMLibrary::app()->getAbsPath();
         } else {
             $arrUrl = parse_url($url);
             $hash = $arrUrl['fragment'] ?? '';
-            $url = str_replace("#{$hash}", "", $url);
+            if ($hash !== '') {
+                $url = str_replace("#{$hash}", '', $url);
+            }
         }
 
-        $msg = urlencode($msg);
-        $finalUrl = $url . (empty($msg) ? '' : "?msg=$msg") . (empty($hash) ? '' : "#{$hash}");
+        if (!empty($msg)) {
+            // Routing is query-string based, so the URL usually already carries
+            // one — appending a second "?" would corrupt it.
+            $separator = strpos($url, '?') === false ? '?' : '&';
+            $url .= $separator . 'msg=' . urlencode($msg);
+        }
+
+        $finalUrl = $url . ($hash === '' ? '' : "#{$hash}");
 
         if (headers_sent()) {
             $jsUrl = json_encode($finalUrl);

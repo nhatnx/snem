@@ -1,0 +1,17 @@
+{
+    "name": "example/snem-starter",
+    "description": "Starter application built on the SNEM micro-framework",
+    "type": "project",
+    "require": {
+        "php": ">=7.4",
+        "nhatnx/snem": "dev-main"
+    },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../.."
+        }
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

@@ -1,0 +1,128 @@
+:root {
+    --bg: #fbfbfa;
+    --fg: #1f2430;
+    --muted: #6b7280;
+    --line: #e3e3e0;
+    --accent: #2b6cb0;
+    --card: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg: #16181d;
+        --fg: #e7e9ee;
+        --muted: #99a1b3;
+        --line: #2b2f38;
+        --accent: #7aa9dd;
+        --card: #1d2027;
+    }
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+a { color: var(--accent); }
+
+.site-header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--line);
+}
+
+.site-header .brand {
+    font-weight: 700;
+    text-decoration: none;
+    color: var(--fg);
+}
+
+.site-header nav { display: flex; gap: 1rem; align-items: baseline; }
+.site-header .who { color: var(--muted); font-size: .9rem; }
+
+.site-main {
+    max-width: 46rem;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 3rem;
+}
+
+.site-footer {
+    max-width: 46rem;
+    margin: 0 auto;
+    padding: 1rem 1.5rem 2rem;
+    color: var(--muted);
+    border-top: 1px solid var(--line);
+    font-size: .9rem;
+}
+
+h1 { line-height: 1.2; }
+h2 { margin-top: 2.5rem; }
+
+.lede { color: var(--muted); font-size: 1.1rem; }
+.meta { color: var(--muted); font-size: .875rem; }
+.empty { color: var(--muted); }
+.hint { color: var(--muted); font-size: .9rem; }
+
+.error, .flash {
+    padding: .75rem 1rem;
+    border-radius: 6px;
+    border: 1px solid var(--line);
+    background: var(--card);
+}
+
+.error { border-color: #d9534f; color: #d9534f; }
+
+.tour, .post-list { list-style: none; padding: 0; }
+.tour li, .post-list li { padding: .6rem 0; border-bottom: 1px solid var(--line); }
+.post-summary h3 { margin: 0 0 .25rem; }
+
+.tree, pre {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 1rem;
+    overflow-x: auto;
+    font-size: .875rem;
+}
+
+code { font-size: .9em; }
+
+.card {
+    display: grid;
+    gap: .75rem;
+    max-width: 26rem;
+    padding: 1.25rem;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+}
+
+.card label { display: grid; gap: .3rem; font-size: .9rem; color: var(--muted); }
+
+input, textarea, button {
+    font: inherit;
+    padding: .5rem .6rem;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--fg);
+}
+
+button {
+    justify-self: start;
+    padding: .5rem 1.1rem;
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    cursor: pointer;
+}
+
+.post .body { margin: 1.5rem 0; }

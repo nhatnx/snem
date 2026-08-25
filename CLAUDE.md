@@ -16,11 +16,11 @@ PSR-4 maps `app\core\` to the repo root, so `SNEMLibrary.php` at the root is `ap
 
 A consuming app calls `SNEMLibrary::createApplication($config)` (singleton; `$config` is an array or a path to a PHP file returning one) followed by `->run()`. `SNEMLibrary::app()` retrieves the singleton anywhere. `ADODB_DIR` is defined automatically by adodb's composer `files` autoload (with a fallback in `SNEMLibrary.php`); apps do not need to define it.
 
-Config is merged over framework defaults in `resolveConfig()` — a minimal app only supplies `name`, `basePath`, and `db`. Path keys (`pagePath`, `templatePath`, `helperPath`, `rootPath`) default to subdirectories of `basePath`; `autoloadPaths` (the app class directories scanned by the lazy autoloader) defaults to `app/controllers`, `app/models`, `app/helpers` and is replaced wholesale (not merged) when overridden. `run()` auto-starts the PHP session if none is active.
+Config is merged over framework defaults in `resolveConfig()` — a minimal app only supplies `name`, `basePath`, and `db`. Path keys (`pagePath`, `templatePath`, `helperPath`, `rootPath`) default to subdirectories of `basePath`; `autoloadPaths` (the app class directories scanned by the lazy autoloader) defaults to `{basePath}/app/controllers|models|helpers` and is replaced wholesale (not merged) when overridden. `run()` auto-starts the PHP session if none is active.
 
 Routing is query-string based, driven entirely by the consuming app's directory layout (configured via `pagePath`, `templatePath`, `templateName` config keys):
 
-1. `?page=X` → requires `{pagePath}/X/X.php` to exist, else the `notFound.php` template is rendered.
+1. `?page=X` → requires `{pagePath}/X/X.php` to exist, else a 404 header is sent and the `notFound.php` template is rendered. `page`/`task`/`action` are validated against `[A-Za-z0-9_-]+` by `sanitizeRouteToken()` before touching the filesystem (they flow into paths and class names).
 2. `?task=Y` → loads `{pagePath}/X/controllers/YController.php` and instantiates class `YController` (ucfirst'd, global namespace); falls back to base `SEController` if absent.
 3. `?action=Z` → calls `actionZ()` (default: `actionDefault`, which renders the view named after the page), wrapped by optional `beforeAction`/`afterAction` hooks. The action's echoed output is captured into `$view` via output buffering.
 4. Finally the template `{templatePath}/{templateName}/{templateName}.php` is required; inside it the template calls `$snem->mainBody()`, which instantiates the page class (`SEPage` subclass) that echoes `getView()`.
@@ -35,8 +35,12 @@ Controller resolution and action invocation live in `SNEMLibrary::dispatch()`. `
 - `get*` methods return objects (stdClass DTOs via a json round-trip) by default; pass `$fetchDTO = false` for raw ADOdb arrays. Fetch mode is `ADODB_FETCH_ASSOC` with native case.
 
 Two model base classes:
-- `SEModel` — plain model with magic get/set property accessors (`getFoo()`/`setFoo()`) and a per-class singleton via `::model()`.
+- `SEModel` — plain model with magic get/set property accessors (`getFoo()`/`setFoo()`) and a per-class singleton via `::model()`, which resolves through `static::class` (never `__CLASS__` — that would bind to the base class).
 - `SEActiveRecordModel` — extends ADOdb's `ADODB_Active_Record` (the "x" variant). Subclasses override `getTableName()`, `primaryKeys`, and `relations()` (returning `[name => [SEAR_RELATION_BELONGS_TO|SEAR_RELATION_HAS_MANY, foreignKey, modelClass]]`, resolved lazily via `__get`). `save()` auto-fills `created_at`/`updated_at` in `beforeSave()`.
+
+## The starter example
+
+`examples/starter/` is a working app on the framework (MySQL; `schema.sql` seeds it, `php -S localhost:8000` runs it, `demo`/`demo1234` signs in). It is the fastest way to check a framework change end to end, and it doubles as the copy-me template the README points newcomers at — keep it working when changing routing, rendering, or the model bases.
 
 ## Other conventions and gotchas
 

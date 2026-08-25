@@ -43,12 +43,18 @@ class SEModel
     /**
      * Returns the static model of the specified class.
      *
-     * @param string $className
+     * Defaults to the class the call was made on, which is why the default
+     * cannot be __CLASS__ — that constant is bound at compile time to this
+     * base class.
      *
-     * @return SEModel the static model class
+     * @param string|null $className
+     *
+     * @return static the static model class
      */
-    public static function model($className = __CLASS__)
+    public static function model($className = null)
     {
+        $className = $className ?? static::class;
+
         if (!array_key_exists($className, self::$_models)) {
             self::$_models[$className] = new $className();
         }

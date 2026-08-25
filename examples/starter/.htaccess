@@ -1,0 +1,17 @@
+# The whole app sits under the document root, so block direct HTTP access to
+# everything that is meant to be included by index.php rather than requested.
+# (Serving only a public/ directory is the sturdier arrangement; this file is
+# what makes the flat layout safe on Apache.)
+
+<FilesMatch "\.(sql|md)$">
+    Require all denied
+</FilesMatch>
+
+<Files "config.php">
+    Require all denied
+</Files>
+
+RedirectMatch 404 ^/(app|pages|templates|vendor)/
+
+DirectoryIndex index.php
+Options -Indexes
