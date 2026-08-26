@@ -1,3 +1,6 @@
+/.claude
+/.vscode
+
 /vendor
 composer.lock
 
