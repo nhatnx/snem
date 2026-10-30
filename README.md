@@ -285,6 +285,8 @@ try {
 
 Uncaught, the exception stops the request like any fatal error; with `debugMode` off, `error_reporting(0)` keeps its details off the page.
 
+ADOdb's own messages (e.g. mysqli's `SQL Statement failed on preparation: …`) go to the PHP error log (`error_log()`, prefixed `ADOdb:`) instead of being printed into the page. With `db.debugMode` on — or `$db->debug = true` at runtime — they are printed as before, alongside ADOdb's SQL trace. To handle them yourself, define `ADODB_OUTP` (a function name taking `$msg, $newline`) before SNEM loads.
+
 ## Models
 
 ### SEModel (plain)

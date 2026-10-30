@@ -6,6 +6,12 @@ if (!defined('ADODB_ASSOC_CASE')) {
     define('ADODB_ASSOC_CASE', ADODB_ASSOC_CASE_NATIVE);
 }
 
+// ADOdb echoes its messages (e.g. mysqli's "SQL Statement failed on
+// preparation") straight into the page; route them through ADODatabase::outp.
+if (!defined('ADODB_OUTP')) {
+    define('ADODB_OUTP', 'app\core\ADODatabase::outp');
+}
+
 use ADOConnection;
 
 /**
@@ -21,6 +27,9 @@ class ADODatabase
     private string $tablePrefix = '';
 
     public static int $initFetchMode = ADODB_FETCH_ASSOC;
+
+    /** @var bool echo ADOdb messages like ADOdb does, instead of logging them (debug mode) */
+    public static bool $echoOutput = false;
 
     /**
      * Database object constructor
@@ -58,7 +67,7 @@ class ADODatabase
             $this->conn->setConnectionParameter(MYSQLI_SET_CHARSET_NAME, 'utf8mb4');
         }
         $this->conn->connect($host, $user, $pass, $db);
-        $this->conn->debug = $debugMode;
+        $this->conn->debug = self::$echoOutput = $debugMode;
         $this->conn->setFetchMode(self::$initFetchMode = ADODB_FETCH_ASSOC);
 
         $this->tablePrefix = $tablePrefix;
@@ -80,6 +89,25 @@ class ADODatabase
         $sql = ($fn !== 'CONNECT' && is_string($p1)) ? $p1 : null;
 
         throw new SEDbException((string)$fn, (string)$errmsg, (int)$errno, $sql);
+    }
+
+    /**
+     * ADOdb output handler (see `ADODB_OUTP`). Writes ADOdb's messages to the
+     * PHP error log instead of the page; in debug mode they are echoed as
+     * ADOdb would, since the SQL trace is meant to be seen there.
+     */
+    public static function outp($msg, $newline = true): void
+    {
+        if (self::$echoOutput) {
+            echo $newline ? "{$msg}<br>\n" : $msg;
+
+            return;
+        }
+
+        $text = trim(html_entity_decode(strip_tags((string)$msg), ENT_QUOTES));
+        if ($text !== '') {
+            error_log("ADOdb: {$text}");
+        }
     }
 
     /**
@@ -124,6 +152,11 @@ class ADODatabase
     public function __set($property, $value)
     {
         $this->conn->$property = $value;
+
+        // `$db->debug = true` should still print the SQL trace on the page
+        if ($property === 'debug') {
+            self::$echoOutput = (bool)$value;
+        }
     }
 
     public function __isset($property)
