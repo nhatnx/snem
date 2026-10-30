@@ -18,7 +18,10 @@ class SEDbException extends SEException
         $this->operation = $operation;
         $this->sql = $sql;
 
-        $text = "Database {$operation} failed: " . ($message !== '' ? $message : 'unknown error');
+        // ADOdb rejects some queries (e.g. a placeholder count mismatch)
+        // before the driver sees them, leaving no error message.
+        $text = "Database {$operation} failed: "
+            . ($message !== '' ? $message : 'no error reported by the driver (check the placeholder count)');
         if ($code) {
             $text .= " [{$code}]";
         }

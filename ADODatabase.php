@@ -48,6 +48,11 @@ class ADODatabase
         // exceptions. Set before connect() so a failed connection throws too,
         // and on the connection itself so Active Record queries are covered.
         $this->conn->raiseErrorFn = [self::class, 'raiseError'];
+        // Drivers cache the last error and some failure paths (mysqli prepare
+        // errors, placeholder mismatches) don't refresh it, so clear it before
+        // every query. LogSQL() takes this hook over; errors still throw then,
+        // but those paths may report a stale message.
+        $this->conn->fnExecute = [self::class, 'clearError'];
 
         if ($driver === 'mysqli') {
             $this->conn->setConnectionParameter(MYSQLI_SET_CHARSET_NAME, 'utf8mb4');
@@ -78,6 +83,19 @@ class ADODatabase
     }
 
     /**
+     * ADOdb pre-execute hook (see `fnExecute`): drops the cached error so
+     * errorMsg()/errorNo() describe this query, not an earlier one. Returns
+     * null so the query proceeds.
+     */
+    public static function clearError(ADOConnection $conn, $sql = null, $inputarr = null)
+    {
+        $conn->_errorMsg = false;
+        $conn->_errorCode = false;
+
+        return null;
+    }
+
+    /**
      * Throws for a failed query result. Driver errors have already thrown via
      * raiseError(), so this only catches the ADOdb paths that return false
      * without invoking `raiseErrorFn` (e.g. a placeholder count mismatch) —
@@ -89,7 +107,7 @@ class ADODatabase
     private function assertResult($rs, string $operation, string $sql): void
     {
         if ($rs === false && $this->conn->raiseErrorFn) {
-            throw new SEDbException($operation, 'query rejected before execution (check the placeholder count)', 0, $sql);
+            throw new SEDbException($operation, '', 0, $sql);
         }
     }
 
