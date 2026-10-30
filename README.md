@@ -273,6 +273,18 @@ $newId = $db->getInsertId();
 
 The `get*` methods return `stdClass` objects (`$user->name`) by default; pass `false` as the last argument for raw ADOdb arrays.
 
+Database errors throw `\app\core\SEDbException` instead of returning `false` — a failed connection, any failed query (`execute()`, `get*`, forwarded ADOdb calls, Active Record `save()`/`find()`). The message carries the driver error and the SQL; `getSql()` and `getOperation()` expose them. An empty result is still `null`/`[]`, not an error. To get ADOdb's old return-`false` behaviour for a block, wrap it in `$saved = $db->IgnoreErrors(); … $db->IgnoreErrors($saved);`.
+
+```php
+try {
+    $db->execute("UPDATE #__users SET status = ? WHERE id = ?", ['banned', $id]);
+} catch (\app\core\SEDbException $e) {
+    // $e->getMessage(): "Database EXECUTE failed: ... [errno]\nSQL: UPDATE ..."
+}
+```
+
+Uncaught, the exception stops the request like any fatal error; with `debugMode` off, `error_reporting(0)` keeps its details off the page.
+
 ## Models
 
 ### SEModel (plain)

@@ -44,6 +44,11 @@ class ADODatabase
     ) {
         $this->conn = newADOConnection($driver);
 
+        // ADOdb reports failures by returning false; turn them into
+        // exceptions. Set before connect() so a failed connection throws too,
+        // and on the connection itself so Active Record queries are covered.
+        $this->conn->raiseErrorFn = [self::class, 'raiseError'];
+
         if ($driver === 'mysqli') {
             $this->conn->setConnectionParameter(MYSQLI_SET_CHARSET_NAME, 'utf8mb4');
         }
@@ -57,6 +62,35 @@ class ADODatabase
     public function getConn(): ADOConnection
     {
         return $this->conn;
+    }
+
+    /**
+     * ADOdb error callback (see `raiseErrorFn`). For CONNECT, $p1/$p2 are the
+     * host and database; for query operations $p1 is the SQL.
+     *
+     * @throws SEDbException
+     */
+    public static function raiseError($dbms, $fn, $errno, $errmsg, $p1 = null, $p2 = null, $conn = null): void
+    {
+        $sql = ($fn !== 'CONNECT' && is_string($p1)) ? $p1 : null;
+
+        throw new SEDbException((string)$fn, (string)$errmsg, (int)$errno, $sql);
+    }
+
+    /**
+     * Throws for a failed query result. Driver errors have already thrown via
+     * raiseError(), so this only catches the ADOdb paths that return false
+     * without invoking `raiseErrorFn` (e.g. a placeholder count mismatch) —
+     * errorMsg() would be stale there. Skipped while errors are suppressed via
+     * IgnoreErrors().
+     *
+     * @throws SEDbException
+     */
+    private function assertResult($rs, string $operation, string $sql): void
+    {
+        if ($rs === false && $this->conn->raiseErrorFn) {
+            throw new SEDbException($operation, 'query rejected before execution (check the placeholder count)', 0, $sql);
+        }
     }
 
     public function __call($method, $args)
@@ -211,6 +245,9 @@ class ADODatabase
             }
         }
 
+        // Every get* returns false only on failure (no rows is null/[])
+        $this->assertResult($rs, strtoupper($type), $sql);
+
         if (!$fetchDTO || empty($rs)) {
             return $rs;
         }
@@ -247,11 +284,40 @@ class ADODatabase
         return $this->getData('getOne', $sql, $inputarr, $fetchDTO);
     }
 
+    /**
+     * @return \ADORecordSet
+     * @throws SEDbException when the query fails
+     */
     public function execute($sql, $inputarr = false)
     {
         $sql = $this->replacePrefix($sql);
 
-        return $this->conn->execute($sql, $inputarr);
+        $rs = $this->conn->execute($sql, $inputarr);
+        $this->assertResult($rs, 'EXECUTE', $sql);
+
+        return $rs;
+    }
+
+    /**
+     * Drivers' genID() creates a missing sequence by letting the first query
+     * fail, so errors are suppressed for the call and a failed result thrown.
+     *
+     * @throws SEDbException
+     */
+    public function genID($seqName = 'adodbseq', $startID = 1)
+    {
+        $saved = $this->conn->IgnoreErrors();
+        try {
+            $id = $this->conn->genID($seqName, $startID);
+        } finally {
+            $this->conn->IgnoreErrors($saved);
+        }
+
+        if (!$id && $this->conn->raiseErrorFn) {
+            throw new SEDbException('GENID', (string)$this->conn->errorMsg(), (int)$this->conn->errorNo());
+        }
+
+        return $id;
     }
 
     public function getInsertId()
