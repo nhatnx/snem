@@ -10,6 +10,13 @@ $autoload = file_exists(__DIR__ . '/vendor/autoload.php')
 
 require $autoload;
 
+use app\core\SEDbException;
 use app\core\SNEMLibrary;
 
-SNEMLibrary::createApplication(__DIR__ . '/config.php')->run();
+try {
+    SNEMLibrary::createApplication(__DIR__ . '/config.php')->run();
+} catch (SEDbException $e) {
+    // Any failed connection or query not handled closer to where it happened.
+    error_log($e->getMessage());
+    require __DIR__ . '/templates/dbError.php';
+}

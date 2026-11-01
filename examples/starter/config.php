@@ -17,11 +17,15 @@ return [
         'password' => '',
         'databaseName' => 'snem_starter',
         'tablePrefix' => 'st_',
+        // true prints ADOdb's SQL trace on the page; false sends its messages
+        // to the PHP error log.
         'debugMode' => false,
     ],
 
     'defaultPage' => 'home',
     'templateName' => 'default',
+    // Controls error_reporting, and whether templates/dbError.php shows the
+    // driver error and SQL.
     'debugMode' => true,
 
     // Absolute paths keep class loading independent of the web server's

@@ -5,6 +5,7 @@
  */
 
 use app\core\SEController;
+use app\core\SEDbException;
 use app\core\SNEMLibrary;
 
 class DefaultController extends SEController
@@ -53,8 +54,16 @@ class DefaultController extends SEController
         $post->author_id = $author->id;
         $post->published = 1;
 
-        // save() returns false when Post::beforeSave() rejects the record.
-        $saved = $post->save();
+        // save() returns false when Post::beforeSave() rejects the record and
+        // throws when the database does (e.g. a title too long for the column).
+        // Catching here keeps the visitor on the form; anything left uncaught
+        // ends up on the error page in index.php.
+        try {
+            $saved = $post->save();
+        } catch (SEDbException $e) {
+            error_log($e->getMessage());
+            SNEMLibrary::redirect('?page=admin', 'The post could not be saved.');
+        }
 
         SNEMLibrary::redirect('?page=admin', $saved ? 'Post published.' : 'A title is required.');
     }
