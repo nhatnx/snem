@@ -46,11 +46,13 @@ it, so the app doubles as a template to copy and a tour to read.
 | `?page=login` | A form posting to a **named task** (`task=auth`) |
 | `?page=admin` | `beforeAction()` guarding a page with `checkAccess()`, plus Active Record reads, a lazy relation, and a validated write |
 | `?page=nope` | The 404 template |
+| `?page=admin`, with a title over 200 characters | Catching `SEDbException` around a write: the column rejects the title and the form shows a message. This needs a strict `sql_mode`, the MySQL default; without one, MySQL cuts the title to 200 characters and saves it |
+| Any page, with a wrong `db.password` in `config.php` | The database error page: `index.php` catches what nothing else handled |
 
 ## Files worth reading, in order
 
 ```text
-index.php                                front controller — four lines
+index.php                                front controller, last-resort DB error handling
 config.php                               every option the app overrides
 templates/default/default.php            the layout; calls $snem->mainBody()
 pages/home/home.php                      the smallest possible page
@@ -70,7 +72,8 @@ pages/admin/controllers/DefaultController.php   access control and writes
   `$snem->db` uses the `#__` placeholder instead.
 - Delete the `$autoload` fallback at the top of `index.php` and keep the plain
   `require __DIR__ . '/vendor/autoload.php'`.
-- Set `debugMode` to `false` before deploying — it controls `error_reporting`.
+- Set `debugMode` to `false` before deploying — it controls `error_reporting`
+  and whether `templates/dbError.php` shows the driver error and SQL.
 - Keep `.htaccess` if you deploy on Apache: the app directories sit under the
   document root, and it is what stops them being fetched directly. Serving only
   a `public/` directory is sturdier still.
@@ -79,7 +82,11 @@ pages/admin/controllers/DefaultController.php   access control and writes
 
 - `templates/notFound.php` and `templates/offline.php` live beside the template
   directories rather than inside one — the framework looks for them at the root
-  of `templatePath`.
+  of `templatePath`. `templates/dbError.php` sits with them, but it is this
+  app's own: `index.php` renders it, not the framework.
+- Database errors throw `SEDbException`. They are logged with `error_log()`, as
+  are ADOdb's own messages, so check the PHP error log; on the page you only see
+  the details while `debugMode` is on.
 - Flip `maintenanceMode.enabledMode` to `true` in `config.php` to see the
   offline page; the app stops before it opens a database connection.
 - The seeded password hash is a real bcrypt digest of `demo1234`. Generate your
