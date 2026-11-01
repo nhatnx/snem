@@ -1,8 +1,7 @@
-/.claude
+.claude/settings.local.json
 /.vscode
 
 /vendor
-composer.lock
 
 # starter example installs the framework into its own vendor/ when copied out
 /examples/*/vendor
